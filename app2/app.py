@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin, expose
+from flask_admin import Admin, expose, BaseView
 from flask_admin.contrib.sqla import ModelView
 from markupsafe import Markup
+from some_statistics import render_top_transactions
 
 app = Flask(__name__, template_folder='/Users/ivankalinets/fastapi-transactions-app/app2/ templates')
 
@@ -11,7 +12,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://todo_user:1234@localhost:5
 app.config['SECRET_KEY'] = 'mysecretkey'
 db = SQLAlchemy(app)
 
-# Модель User
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
@@ -33,7 +33,7 @@ class UserView(ModelView):
 
     column_list = ['id', 'username', 'transactions']
 
-    @expose('/transactions/<int:user_id>')
+    @expose('/transactions/<int:user_id>/')
     def transactions_view(self, user_id):
         # Отримати користувача за user_id
         user = User.query.get(user_id)
@@ -42,12 +42,24 @@ class UserView(ModelView):
 
         # Отримати всі транзакції користувача
         transactions = Transaction.query.filter_by(user_id=user_id).all()
-        return self.render('transactions.html', user=user, transactions=transactions)
+        return self.render('admin/transactions.html', user=user, transactions=transactions)
+
+# Кастомний клас StatisticsView для відображення статистики
+class StatisticsView(BaseView):
+    @expose('/')
+    def index(self):
+        top_transactions_chart = render_top_transactions(db.session)  # Передаємо сесію
+        return self.render('statistics.html', top_transactions_chart=top_transactions_chart)
+
+    def is_accessible(self):
+        # Дозволяємо доступ до сторінки
+        return True
 
 # Ініціалізація Flask-Admin
 admin = Admin(app, name='MyApp Admin', template_mode='bootstrap3')
 admin.add_view(UserView(User, db.session))
 admin.add_view(ModelView(Transaction, db.session))
+admin.add_view(StatisticsView(name='Statistics', endpoint='statistics'))  # Додаємо StatisticsView
 
 # Ендпоїнти
 @app.route('/add_user', methods=['POST'])

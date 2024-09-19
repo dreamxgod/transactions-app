@@ -1,0 +1,11 @@
+sqlalchemy
+asyncpg
+fastapi
+uvicorn
+python-dotenv
+greenlet
+sqlalchemy[asyncio]
+fastapi-admin
+fastapi-users[sqlalchemy2]
+jinja2
+aiofiles
