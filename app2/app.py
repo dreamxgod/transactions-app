@@ -1,10 +1,10 @@
-
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin
+from flask_admin import Admin, expose
 from flask_admin.contrib.sqla import ModelView
+from markupsafe import Markup
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='/Users/ivankalinets/fastapi-transactions-app/app2/ templates')
 
 # Налаштування бази даних
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://todo_user:1234@localhost:5433/transactions-app2"
@@ -20,13 +20,33 @@ class User(db.Model):
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
-    type = db.Column(db.String(50), nullable=False)  # Додали поле type
+    type = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('transactions', lazy=True))
 
+# Кастомний клас UserView для додавання кнопки перегляду транзакцій
+class UserView(ModelView):
+    # Додати колонку з кнопкою для перегляду транзакцій
+    column_formatters = {
+        'transactions': lambda v, c, m, p: Markup(f'<a href="{url_for(".transactions_view", user_id=m.id)}">View Transactions</a>')
+    }
+
+    column_list = ['id', 'username', 'transactions']
+
+    @expose('/transactions/<int:user_id>')
+    def transactions_view(self, user_id):
+        # Отримати користувача за user_id
+        user = User.query.get(user_id)
+        if user is None:
+            return self.render('admin/not_found.html')
+
+        # Отримати всі транзакції користувача
+        transactions = Transaction.query.filter_by(user_id=user_id).all()
+        return self.render('transactions.html', user=user, transactions=transactions)
+
 # Ініціалізація Flask-Admin
 admin = Admin(app, name='MyApp Admin', template_mode='bootstrap3')
-admin.add_view(ModelView(User, db.session))
+admin.add_view(UserView(User, db.session))
 admin.add_view(ModelView(Transaction, db.session))
 
 # Ендпоїнти
