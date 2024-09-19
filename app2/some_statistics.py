@@ -8,20 +8,25 @@ plt.switch_backend('Agg')
 
 # Функція для створення графіку найбільших транзакцій
 def plot_top_transactions(session):
-    from app import Transaction  # Імпорт всередині функції, щоб уникнути циклічного імпорту
+    from app import Transaction, User  # Імпорт всередині функції, щоб уникнути циклічного імпорту
 
-    # Отримати топ-10 транзакцій
+    # Отримати топ-10 транзакцій, відсортованих за спаданням
     transactions = session.query(Transaction).order_by(Transaction.amount.desc()).limit(10).all()
     amounts = [t.amount for t in transactions]
-    user_ids = [t.user_id for t in transactions]
+    usernames = [session.query(User).get(t.user_id).username for t in transactions]
 
     # Побудова графіку
     plt.figure(figsize=(10, 5))
-    plt.bar(user_ids, amounts)
-    plt.xlabel('User ID')
+    bars = plt.bar(usernames, amounts)
+    plt.xlabel('Username')
     plt.ylabel('Transaction Amount')
     plt.title('Top 10 Transactions')
-    
+
+    # Додавання можливості кліку на імена користувачів
+    for bar, transaction in zip(bars, transactions):
+        username = session.query(User).get(transaction.user_id).username
+        bar.set_picker(True)  # Встановлюємо, що стовпчик можна обирати
+
     # Збереження графіку в буфер
     img = io.BytesIO()
     plt.savefig(img, format='png')

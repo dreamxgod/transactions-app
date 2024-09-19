@@ -5,4 +5,23 @@
     <h4>Top 10 Transactions</h4>
     {{ top_transactions_chart|safe }}
   </div>
+
+  <script>
+    // Додаємо подію кліку до імен користувачів на графіку
+    document.querySelectorAll('svg text').forEach(function(text) {
+      text.style.cursor = 'pointer';
+      text.addEventListener('click', function() {
+        var username = text.textContent;
+        // Отримуємо user_id по username
+        fetch(`{{ url_for('get_all_users') }}`)
+          .then(response => response.json())
+          .then(data => {
+            var user = data.find(u => u.username === username);
+            if (user) {
+              window.location.href = `/admin/user/transactions/${user.id}/`;
+            }
+          });
+      });
+    });
+  </script>
 {% endblock %}
