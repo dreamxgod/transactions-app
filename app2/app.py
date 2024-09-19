@@ -38,11 +38,11 @@ class UserView(ModelView):
         # Отримати користувача за user_id
         user = User.query.get(user_id)
         if user is None:
-            return self.render('admin/not_found.html')
+            return self.render('not_found.html')
 
         # Отримати всі транзакції користувача
         transactions = Transaction.query.filter_by(user_id=user_id).all()
-        return self.render('admin/transactions.html', user=user, transactions=transactions)
+        return self.render('transactions.html', user=user, transactions=transactions)
 
 # Кастомний клас StatisticsView для відображення статистики
 class StatisticsView(BaseView):
@@ -114,4 +114,4 @@ def index():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(debug=True, port=8080)
