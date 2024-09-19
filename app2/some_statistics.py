@@ -20,7 +20,7 @@ def plot_top_transactions(session):
     bars = plt.bar(usernames, amounts)
     plt.xlabel('Username')
     plt.ylabel('Transaction Amount')
-    plt.title('Top 10 Transactions')
+    plt.title('Top Transactions')
 
     # Додавання можливості кліку на імена користувачів
     for bar, transaction in zip(bars, transactions):

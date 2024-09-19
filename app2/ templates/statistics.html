@@ -2,26 +2,26 @@
 {% block body %}
   <h3>Statistics</h3>
   <div>
-    <h4>Top 10 Transactions</h4>
+    <h4>Top Transactions</h4>
     {{ top_transactions_chart|safe }}
   </div>
-
-  <script>
-    // Додаємо подію кліку до імен користувачів на графіку
-    document.querySelectorAll('svg text').forEach(function(text) {
-      text.style.cursor = 'pointer';
-      text.addEventListener('click', function() {
-        var username = text.textContent;
-        // Отримуємо user_id по username
-        fetch(`{{ url_for('get_all_users') }}`)
-          .then(response => response.json())
-          .then(data => {
-            var user = data.find(u => u.username === username);
-            if (user) {
-              window.location.href = `/admin/user/transactions/${user.id}/`;
-            }
-          });
-      });
-    });
-  </script>
+  
+  <h3>Transaction Summary</h3>
+  <form method="post">
+    <label for="date">Select Date:</label>
+    <input type="date" id="date" name="date" required>
+    <button type="submit">Show Summary</button>
+  </form>
+  
+  {% if date %}
+  <div>
+    <h4>Summary for {{ date.strftime('%Y-%m-%d') }}</h4>
+    <p>Total Amount: {{ total_amount }}</p>
+    {% if max_transaction %}
+    <p>Max Transaction: {{ max_transaction.amount }} by User ID: {{ max_transaction.user_id }}</p>
+    {% else %}
+    <p>No transactions for this date.</p>
+    {% endif %}
+  </div>
+  {% endif %}
 {% endblock %}
