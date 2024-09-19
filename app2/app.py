@@ -52,6 +52,10 @@ class UserView(ModelView):
 class StatisticsView(BaseView):
     @expose('/', methods=['GET', 'POST'])
     def index(self):
+        # Загальна кількість і сума транзакцій
+        total_transactions_count = Transaction.query.count()
+        total_transactions_sum = db.session.query(db.func.sum(Transaction.amount)).scalar()
+
         total_amount = None
         max_transaction = None
         date = None
@@ -65,8 +69,7 @@ class StatisticsView(BaseView):
                 max_transaction = max(transactions, key=lambda t: t.amount) if transactions else None
 
         top_transactions_chart = render_top_transactions(db.session)  # Передаємо сесію
-        return self.render('statistics.html', top_transactions_chart=top_transactions_chart, total_amount=total_amount, max_transaction=max_transaction, date=date)
-
+        return self.render('statistics.html', top_transactions_chart=top_transactions_chart, total_amount=total_amount, max_transaction=max_transaction, date=date, total_transactions_count=total_transactions_count, total_transactions_sum=total_transactions_sum)
     def is_accessible(self):
         # Дозволяємо доступ до сторінки
         return True
