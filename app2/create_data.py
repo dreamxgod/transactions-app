@@ -1,7 +1,6 @@
 import requests
 from faker import Faker
 import random
-from datetime import timedelta
 
 
 BASE_URL = "http://127.0.0.1:8080"

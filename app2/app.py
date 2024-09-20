@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, url_for, redirect
+from flask import Flask, request, jsonify, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin, expose, BaseView
 from flask_admin.contrib.sqla import ModelView
@@ -72,11 +72,11 @@ admin.add_view(StatisticsView(name='Statistics', endpoint='statistics'))
 
 @app.route('/add_user', methods=['POST'])
 def add_user():
-    username = request.json.get('username')
+    username = request.json.get('username') #type: ignore
     if not username:
         return jsonify({"error": "Username is required"}), 400
 
-    user = User(username=username)
+    user = User(username=username) #type: ignore
     db.session.add(user)
     db.session.commit()
     return jsonify({"id": user.id, "username": user.username})
@@ -101,10 +101,10 @@ def get_all_users():
 
 @app.route('/add_transaction', methods=['POST'])
 def add_transaction():
-    user_id = request.json.get('user_id')
-    amount = request.json.get('amount')
-    type = request.json.get('type')
-    date_str = request.json.get('date')
+    user_id = request.json.get('user_id') #type: ignore
+    amount = request.json.get('amount') #type: ignore
+    type = request.json.get('type') #type: ignore
+    date_str = request.json.get('date') #type: ignore
     
     user = User.query.get(user_id)
     if not user:
@@ -115,7 +115,7 @@ def add_transaction():
     else:
         date = datetime.utcnow()
         
-    transaction = Transaction(amount=amount, type=type, date=date, user=user)
+    transaction = Transaction(amount=amount, type=type, date=date, user=user) #type: ignore
     db.session.add(transaction)
     db.session.commit()
     return jsonify({"id": transaction.id, "amount": transaction.amount, "type": transaction.type, "date": transaction.date.isoformat()})
