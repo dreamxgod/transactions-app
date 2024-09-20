@@ -6,26 +6,33 @@ from markupsafe import Markup
 # Встановлюємо режим 'Agg' для matplotlib
 plt.switch_backend('Agg')
 
-# Функція для створення графіку найбільших транзакцій
+# Функція для створення графіку найбільших транзакцій по кожному користувачу
 def plot_top_transactions(session):
-    from app import Transaction, User  # Імпорт всередині функції, щоб уникнути циклічного імпорту
+    from app import Transaction, User, db  # Імпорт всередині функції, щоб уникнути циклічного імпорту
 
-    # Отримати топ-10 транзакцій, відсортованих за спаданням
-    transactions = session.query(Transaction).order_by(Transaction.amount.desc()).limit(10).all()
-    amounts = [t.amount for t in transactions]
-    usernames = [session.query(User).get(t.user_id).username for t in transactions]
+    # Отримати кожного користувача і знайти їх найбільшу транзакцію
+    subquery = session.query(
+        Transaction.user_id,
+        db.func.max(Transaction.amount).label('max_amount')
+    ).group_by(Transaction.user_id).subquery()
+
+    # Отримати найбільші 5 транзакцій з username
+    top_transactions = session.query(Transaction).join(
+        subquery, 
+        (Transaction.user_id == subquery.c.user_id) & 
+        (Transaction.amount == subquery.c.max_amount)
+    ).order_by(Transaction.amount.desc()).limit(5).all()
+
+    # Підготовка даних для графіка
+    amounts = [t.amount for t in top_transactions]
+    usernames = [session.query(User).get(t.user_id).username for t in top_transactions]
 
     # Побудова графіку
     plt.figure(figsize=(10, 5))
     bars = plt.bar(usernames, amounts)
     plt.xlabel('Username')
     plt.ylabel('Transaction Amount')
-    plt.title('Top Transactions')
-
-    # Додавання можливості кліку на імена користувачів
-    for bar, transaction in zip(bars, transactions):
-        username = session.query(User).get(transaction.user_id).username
-        bar.set_picker(True)  # Встановлюємо, що стовпчик можна обирати
+    plt.title('Top 5 Users by Largest Transaction')
 
     # Збереження графіку в буфер
     img = io.BytesIO()

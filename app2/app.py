@@ -5,11 +5,10 @@ from flask_admin.contrib.sqla import ModelView
 from markupsafe import Markup
 from some_statistics import render_top_transactions
 from datetime import datetime
-from flask_migrate import Migrate  # Імпортуємо Migrate
+from flask_migrate import Migrate
 
 app = Flask(__name__, template_folder='/Users/ivankalinets/fastapi-transactions-app/app2/ templates')
 
-# Налаштування бази даних
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://todo_user:1234@localhost:5433/transactions-app2"
 app.config['SECRET_KEY'] = 'mysecretkey'
 db = SQLAlchemy(app)
@@ -19,18 +18,15 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
 
-# Модель Transaction
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)
     type = db.Column(db.String(50), nullable=False)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Додаємо поле для дати
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('transactions', lazy=True))
 
-# Кастомний клас UserView для додавання кнопки перегляду транзакцій
 class UserView(ModelView):
-    # Додати колонку з кнопкою для перегляду транзакцій
     column_formatters = {
         'transactions': lambda v, c, m, p: Markup(f'<a href="{url_for(".transactions_view", user_id=m.id)}">View Transactions</a>')
     }
@@ -39,20 +35,16 @@ class UserView(ModelView):
 
     @expose('/transactions/<int:user_id>/')
     def transactions_view(self, user_id):
-        # Отримати користувача за user_id
         user = User.query.get(user_id)
         if user is None:
             return self.render('not_found.html')
 
-        # Отримати всі транзакції користувача
         transactions = Transaction.query.filter_by(user_id=user_id).all()
         return self.render('transactions.html', user=user, transactions=transactions)
 
-# Кастомний клас StatisticsView для відображення статистики
 class StatisticsView(BaseView):
     @expose('/', methods=['GET', 'POST'])
     def index(self):
-        # Загальна кількість і сума транзакцій
         total_transactions_count = Transaction.query.count()
         total_transactions_sum = db.session.query(db.func.sum(Transaction.amount)).scalar()
 
@@ -68,19 +60,16 @@ class StatisticsView(BaseView):
                 total_amount = sum(t.amount for t in transactions)
                 max_transaction = max(transactions, key=lambda t: t.amount) if transactions else None
 
-        top_transactions_chart = render_top_transactions(db.session)  # Передаємо сесію
+        top_transactions_chart = render_top_transactions(db.session)
         return self.render('statistics.html', top_transactions_chart=top_transactions_chart, total_amount=total_amount, max_transaction=max_transaction, date=date, total_transactions_count=total_transactions_count, total_transactions_sum=total_transactions_sum)
     def is_accessible(self):
-        # Дозволяємо доступ до сторінки
         return True
 
-# Ініціалізація Flask-Admin
 admin = Admin(app, name='MyApp Admin', template_mode='bootstrap3')
 admin.add_view(UserView(User, db.session))
 admin.add_view(ModelView(Transaction, db.session))
-admin.add_view(StatisticsView(name='Statistics', endpoint='statistics'))  # Додаємо StatisticsView
+admin.add_view(StatisticsView(name='Statistics', endpoint='statistics'))
 
-# Ендпоїнти
 @app.route('/add_user', methods=['POST'])
 def add_user():
     username = request.json.get('username')
@@ -121,7 +110,6 @@ def add_transaction():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # Перевірка, чи передано дату, якщо ні - використовуємо поточну дату
     if date_str:
         date = datetime.strptime(date_str, '%Y-%m-%d')
     else:
@@ -132,7 +120,6 @@ def add_transaction():
     db.session.commit()
     return jsonify({"id": transaction.id, "amount": transaction.amount, "type": transaction.type, "date": transaction.date.isoformat()})
 
-# Маршрут для тестування
 @app.route('/')
 def index():
     return '<h1>Flask Admin App</h1>'
