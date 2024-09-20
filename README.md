@@ -4,7 +4,7 @@ To get started with this project, follow the steps below:
 
 1. **Clone the repository:**
    ```bash
-   git clone git@github.com:dreamxgod/mc-menu-tesk.git
+   git@github.com:dreamxgod/transactions-app.git
    ```
 2. **Run project with Docker:**
    ```bash
