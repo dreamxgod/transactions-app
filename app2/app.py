@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin, expose, BaseView
+from flask_admin import Admin, expose, BaseView, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from markupsafe import Markup
 from some_statistics import render_top_transactions
@@ -65,7 +65,13 @@ class StatisticsView(BaseView):
     def is_accessible(self):
         return True
 
-admin = Admin(app, name='MyApp Admin', template_mode='bootstrap3')
+class MyAdminIndexView(AdminIndexView):
+    @expose('/')
+    def index(self):
+        welcome_message = Markup("<h2>Welcome to admin app</h2><p>Browse windows on top to discover all functionality</p>")
+        return self.render('index.html', welcome_message=welcome_message)
+
+admin = Admin(app, name='MyApp Admin', template_mode='bootstrap3', index_view=MyAdminIndexView())
 admin.add_view(UserView(User, db.session))
 admin.add_view(ModelView(Transaction, db.session))
 admin.add_view(StatisticsView(name='Statistics', endpoint='statistics'))
