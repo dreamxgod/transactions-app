@@ -14,11 +14,12 @@ To get started with this project, follow the steps below:
    ```bash
    cd app2
    ```
-  ```bash
+   ```bash
    python create_data.py
    ```
 3. **Navigate to the Flask Admin:**
    [Admin](http://127.0.0.1:8080/admin/))
-##Project review
+   
+## Project review
 
 In the Flask Admin there are `Home`, `Users`, `Transactions`, `Statistics` windows. In `Users`, `Transactions` you can see and manage db data, in `Statistics` you can see top transactions, date filter, overview statistic. Additionally there are script to clear db `clear_db.py`.
