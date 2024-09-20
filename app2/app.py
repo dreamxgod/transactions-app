@@ -7,7 +7,7 @@ from some_statistics import render_top_transactions
 from datetime import datetime
 from flask_migrate import Migrate
 
-app = Flask(__name__, template_folder='/Users/ivankalinets/fastapi-transactions-app/app2/ templates')
+app = Flask(__name__, template_folder='./ templates')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://todo_user:1234@localhost:5433/transactions-app2"
 app.config['SECRET_KEY'] = 'mysecretkey'
